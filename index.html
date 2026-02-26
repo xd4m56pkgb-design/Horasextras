@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Comparativa PRO: Guardias + Horas (con 4,7% cotización horas)</title>
+  <style>
+    :root{ --border:#e6e6e6; --muted:#666; }
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:20px;max-width:1100px;color:#111;}
+    h1{font-size:20px;margin:0 0 8px;}
+    .muted{color:var(--muted);font-size:12px;margin:0 0 16px;}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:#f6f6f6;font-size:12px;margin:6px 0 0;}
+    .pill b{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    @media (max-width: 900px){ .grid{grid-template-columns:1fr;} }
+    .card{border:1px solid var(--border);border-radius:12px;padding:14px;background:#fff;}
+    .card h2{font-size:15px;margin:0 0 10px;}
+    label{display:block;font-size:12px;color:#333;margin:10px 0 6px;}
+    input{width:100%;padding:10px;border:1px solid #ccc;border-radius:10px;font-size:14px;outline:none;}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+    button{padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#f6f6f6;cursor:pointer;font-weight:700;}
+    button.primary{background:#111;color:#fff;border-color:#111;}
+    .kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+    .kpi{border:1px dashed var(--border);border-radius:12px;padding:12px;}
+    .kpi .t{font-size:12px;color:var(--muted);margin-bottom:6px;}
+    .kpi .v{font-size:20px;font-weight:900;}
+    .kpi .s{font-size:12px;color:var(--muted);margin-top:6px;}
+    .diffPos{color:#0a7;}
+    .diffNeg{color:#c00;}
+    .hr{height:1px;background:var(--border);margin:12px 0;}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+    table{width:100%;border-collapse:collapse;font-size:13px;}
+    th,td{padding:8px;border-bottom:1px solid var(--border);text-align:left;}
+    th{font-size:12px;color:var(--muted);font-weight:800;}
+    canvas{width:100%;height:320px;border:1px solid var(--border);border-radius:12px;background:#fff;display:block;}
+    .hint{font-size:12px;color:var(--muted);margin-top:8px;}
+    .err{color:#c00;font-weight:800;}
+    .note{font-size:12px;color:#222;background:#fff7e6;border:1px solid #ffe0a3;padding:10px;border-radius:10px;margin-top:10px;}
+  </style>
+</head>
+<body>
+
+<h1>Comparativa PRO: Guardias + Horas (Antiguo vs Nuevo)</h1>
+<p class="muted">
+  Importes <b>brutos</b> y <b>neto estimado</b>. Las <b>horas extra pagadas</b> descuentan automáticamente
+  <b>4,7%</b> de cotización del trabajador (horas extra normales).
+</p>
+<div class="pill">Horas extra pagadas: descuento automático <b>4,7%</b> (cotización trabajador)</div>
+
+<div class="grid" style="margin-top:12px;">
+  <div class="card">
+    <h2>Modelo NUEVO</h2>
+    <div class="row">
+      <div><label>Guardias a precio A (cantidad)</label><input id="new_gA_cant" type="number" value="6" min="0" step="1"></div>
+      <div><label>Precio guardia A (€)</label><input id="new_gA_precio" type="number" value="300" min="0" step="0.01"></div>
+    </div>
+    <div class="row">
+      <div><label>Guardias a precio B (cantidad)</label><input id="new_gB_cant" type="number" value="6" min="0" step="1"></div>
+      <div><label>Precio guardia B (€)</label><input id="new_gB_precio" type="number" value="400" min="0" step="0.01"></div>
+    </div>
+    <div class="row">
+      <div><label>Horas extra pagadas (cantidad)</label><input id="new_horas_cant" type="number" value="80" min="0" step="1"></div>
+      <div><label>Precio hora (€)</label><input id="new_hora_precio" type="number" value="25" min="0" step="0.01"></div>
+    </div>
+    <div class="note">
+      <b>Nota:</b> el neto estimado descuenta <b>solo</b> el 4,7% de cotización del trabajador sobre las horas extra.
+      No descuenta IRPF ni otras cotizaciones.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Modelo ANTIGUO</h2>
+    <div class="row">
+      <div><label>Guardias (cantidad total)</label><input id="old_guardias_cant" type="number" value="12" min="0" step="1"></div>
+      <div><label>Precio guardia (€)</label><input id="old_guardia_precio" type="number" value="200" min="0" step="0.01"></div>
+    </div>
+    <div class="row">
+      <div><label>Horas extra pagadas (cantidad)</label><input id="old_horas_cant" type="number" value="300" min="0" step="1"></div>
+      <div><label>Precio hora (€)</label><input id="old_hora_precio" type="number" value="25" min="0" step="0.01"></div>
+    </div>
+
+    <div class="btns">
+      <button class="primary" id="btnCalc">Calcular</button>
+      <button id="btnSave">Guardar</button>
+      <button id="btnLoad">Cargar</button>
+      <button id="btnReset">Reset</button>
+    </div>
+
+    <div class="hint">Guardar/Cargar usa <span class="mono">localStorage</span> del navegador.</div>
+  </div>
+</div>
+
+<div class="grid" style="margin-top:14px;">
+  <div class="card">
+    <h2>Resultados</h2>
+
+    <div class="kpis">
+      <div class="kpi">
+        <div class="t">Nuevo (anual) — BRUTO</div>
+        <div class="v mono" id="k_new_year_gross">—</div>
+        <div class="s">Mensual aprox.: <span class="mono" id="k_new_month_gross">—</span></div>
+      </div>
+      <div class="kpi">
+        <div class="t">Antiguo (anual) — BRUTO</div>
+        <div class="v mono" id="k_old_year_gross">—</div>
+        <div class="s">Mensual aprox.: <span class="mono" id="k_old_month_gross">—</span></div>
+      </div>
+    </div>
+
+    <div class="kpis" style="margin-top:10px;">
+      <div class="kpi">
+        <div class="t">Nuevo (anual) — NETO estimado</div>
+        <div class="v mono" id="k_new_year_net">—</div>
+        <div class="s">Mensual aprox.: <span class="mono" id="k_new_month_net">—</span></div>
+      </div>
+      <div class="kpi">
+        <div class="t">Antiguo (anual) — NETO estimado</div>
+        <div class="v mono" id="k_old_year_net">—</div>
+        <div class="s">Mensual aprox.: <span class="mono" id="k_old_month_net">—</span></div>
+      </div>
+    </div>
+
+    <div class="hr"></div>
+
+    <div class="kpi">
+      <div class="t">Diferencia (nuevo - antiguo)</div>
+      <div class="v mono" id="k_diff_year">—</div>
+      <div class="s">Mensual aprox.: <span class="mono" id="k_diff_month">—</span></div>
+      <div class="s">También en neto estimado: <span class="mono" id="k_diff_year_net">—</span> (mensual <span class="mono" id="k_diff_month_net">—</span>)</div>
+    </div>
+
+    <div class="hr"></div>
+
+    <h2 style="font-size:15px;margin:0 0 10px;">Detalle (componentes)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Concepto</th>
+          <th>Nuevo (bruto)</th>
+          <th>Antiguo (bruto)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Guardias</td><td class="mono" id="t_new_guardias_gross">—</td><td class="mono" id="t_old_guardias_gross">—</td></tr>
+        <tr><td>Horas extra pagadas</td><td class="mono" id="t_new_horas_gross">—</td><td class="mono" id="t_old_horas_gross">—</td></tr>
+        <tr><td><b>Total anual</b></td><td class="mono" id="t_new_total_gross"><b>—</b></td><td class="mono" id="t_old_total_gross"><b>—</b></td></tr>
+      </tbody>
+    </table>
+
+    <div class="hr"></div>
+
+    <h2 style="font-size:15px;margin:0 0 10px;">Cotización trabajador aplicada (solo horas extra)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Concepto</th>
+          <th>Nuevo</th>
+          <th>Antiguo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Horas extra (bruto)</td><td class="mono" id="t_new_horas_bruto">—</td><td class="mono" id="t_old_horas_bruto">—</td></tr>
+        <tr><td>Descuento 4,7% (cotización)</td><td class="mono" id="t_new_cot">—</td><td class="mono" id="t_old_cot">—</td></tr>
+        <tr><td>Horas extra (neto estimado)</td><td class="mono" id="t_new_horas_neto">—</td><td class="mono" id="t_old_horas_neto">—</td></tr>
+      </tbody>
+    </table>
+
+    <div class="hint err" id="errBox" style="display:none;"></div>
+  </div>
+
+  <div class="card">
+    <h2>Gráfico (BRUTO anual + línea mensual)</h2>
+    <canvas id="chart"></canvas>
+    <p class="hint">Barras: total anual BRUTO. Línea punteada: mensual BRUTO.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  const WORKER_OT_RATE = 0.047; // 4,7% cotización trabajador sobre horas extra (normales/voluntarias)
+
+  const nf = new Intl.NumberFormat("es-ES", { style:"currency", currency:"EUR" });
+  function fmtEUR(n){ return nf.format(Number.isFinite(n) ? n : 0); }
+
+  function num(id){
+    const el = document.getElementById(id);
+    const v = Number(el && el.value);
+    return Number.isFinite(v) ? v : 0;
+  }
+  function setText(id, txt){ document.getElementById(id).textContent = txt; }
+  function showErr(msg){
+    const box = document.getElementById("errBox");
+    box.style.display = "block";
+    box.textContent = msg;
+  }
+  function clearErr(){
+    const box = document.getElementById("errBox");
+    box.style.display = "none";
+    box.textContent = "";
+  }
+
+  function computeModelNew(){
+    const guardias =
+      (num("new_gA_cant") * num("new_gA_precio")) +
+      (num("new_gB_cant") * num("new_gB_precio"));
+
+    const horas_bruto = num("new_horas_cant") * num("new_hora_precio");
+    const cot = horas_bruto * WORKER_OT_RATE;
+    const horas_neto = horas_bruto - cot;
+
+    const total_bruto = guardias + horas_bruto;
+    const total_neto = guardias + horas_neto; // guardias se mantienen (no aplicamos 4,7% aquí)
+
+    return { guardias, horas_bruto, cot, horas_neto, total_bruto, total_neto };
+  }
+
+  function computeModelOld(){
+    const guardias = num("old_guardias_cant") * num("old_guardia_precio");
+
+    const horas_bruto = num("old_horas_cant") * num("old_hora_precio");
+    const cot = horas_bruto * WORKER_OT_RATE;
+    const horas_neto = horas_bruto - cot;
+
+    const total_bruto = guardias + horas_bruto;
+    const total_neto = guardias + horas_neto;
+
+    return { guardias, horas_bruto, cot, horas_neto, total_bruto, total_neto };
+  }
+
+  function compute(){
+    const n = computeModelNew();
+    const o = computeModelOld();
+
+    return {
+      n, o,
+      diff_bruto: n.total_bruto - o.total_bruto,
+      diff_neto: n.total_neto - o.total_neto
+    };
+  }
+
+  function drawChart(totalNew, totalOld){
+    const c = document.getElementById("chart");
+    const ctx = c.getContext("2d");
+
+    const Wcss = c.clientWidth || 900;
+    const Hcss = 320;
+    c.style.height = Hcss + "px";
+
+    const dpr = window.devicePixelRatio || 1;
+    c.width = Math.round(Wcss * dpr);
+    c.height = Math.round(Hcss * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+
+    const padL=56, padR=16, padT=18, padB=42;
+    const plotW = Wcss - padL - padR;
+    const plotH = Hcss - padT - padB;
+    const x0 = padL, y0 = padT + plotH;
+
+    ctx.clearRect(0,0,Wcss,Hcss);
+
+    const maxV = Math.max(totalNew, totalOld, 1) * 1.15;
+    const y = (v)=> padT + (1 - (v/maxV)) * plotH;
+
+    // grid
+    ctx.font = "12px system-ui";
+    ctx.strokeStyle = "#e6e6e6";
+    ctx.fillStyle = "#666";
+    const ticks = 5;
+    for(let i=0;i<=ticks;i++){
+      const v = (maxV/ticks)*i;
+      const yy = y(v);
+      ctx.beginPath(); ctx.moveTo(x0,yy); ctx.lineTo(x0+plotW,yy); ctx.stroke();
+      ctx.fillText(nf.format(v), 6, yy+4);
+    }
+
+    const barW = Math.min(160, plotW/5);
+    const gap = Math.min(80, (plotW - barW*2)/3);
+    const xNew = x0 + gap;
+    const xOld = x0 + gap*2 + barW;
+
+    ctx.fillStyle = "#222";
+    const newY = y(totalNew);
+    ctx.fillRect(xNew, newY, barW, y0-newY);
+
+    ctx.fillStyle = "#777";
+    const oldY = y(totalOld);
+    ctx.fillRect(xOld, oldY, barW, y0-oldY);
+
+    ctx.strokeStyle = "#111";
+    ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x0+plotW,y0); ctx.stroke();
+
+    ctx.font = "700 13px system-ui";
+    ctx.fillStyle = "#111";
+    ctx.fillText("NUEVO", xNew, Hcss-18);
+    ctx.fillText("ANTIGUO", xOld, Hcss-18);
+
+    ctx.font = "12px ui-monospace, Menlo, Consolas, monospace";
+    ctx.fillStyle = "#111";
+    ctx.fillText(fmtEUR(totalNew), xNew, Math.max(14, newY-8));
+    ctx.fillStyle = "#444";
+    ctx.fillText(fmtEUR(totalOld), xOld, Math.max(14, oldY-8));
+
+    // monthly dotted line (BRUTO)
+    const newM = totalNew/12, oldM = totalOld/12;
+    ctx.setLineDash([6,4]);
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(xNew + barW/2, y(newM));
+    ctx.lineTo(xOld + barW/2, y(oldM));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = "#000";
+    ctx.beginPath(); ctx.arc(xNew+barW/2, y(newM), 3, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(xOld+barW/2, y(oldM), 3, 0, Math.PI*2); ctx.fill();
+
+    ctx.fillStyle = "#666";
+    ctx.font = "12px system-ui";
+    ctx.fillText("Barras = anual BRUTO", x0, 14);
+    ctx.fillText("Línea punteada = mensual BRUTO", x0+150, 14);
+  }
+
+  function render(){
+    clearErr();
+    const r = compute();
+
+    // KPIs BRUTO
+    setText("k_new_year_gross", fmtEUR(r.n.total_bruto));
+    setText("k_new_month_gross", fmtEUR(r.n.total_bruto/12));
+    setText("k_old_year_gross", fmtEUR(r.o.total_bruto));
+    setText("k_old_month_gross", fmtEUR(r.o.total_bruto/12));
+
+    // KPIs NETO estimado (solo descuento 4,7% en horas)
+    setText("k_new_year_net", fmtEUR(r.n.total_neto));
+    setText("k_new_month_net", fmtEUR(r.n.total_neto/12));
+    setText("k_old_year_net", fmtEUR(r.o.total_neto));
+    setText("k_old_month_net", fmtEUR(r.o.total_neto/12));
+
+    // Diferencias
+    const diffYearEl = document.getElementById("k_diff_year");
+    const diffMonthEl = document.getElementById("k_diff_month");
+    diffYearEl.textContent = fmtEUR(r.diff_bruto);
+    diffMonthEl.textContent = fmtEUR(r.diff_bruto/12);
+
+    const diffYearNetEl = document.getElementById("k_diff_year_net");
+    const diffMonthNetEl = document.getElementById("k_diff_month_net");
+    diffYearNetEl.textContent = fmtEUR(r.diff_neto);
+    diffMonthNetEl.textContent = fmtEUR(r.diff_neto/12);
+
+    [diffYearEl,diffMonthEl,diffYearNetEl,diffMonthNetEl].forEach(el=>{
+      el.classList.remove("diffPos","diffNeg");
+      el.classList.add((el.textContent.includes("-") ? "diffNeg" : "diffPos"));
+    });
+
+    // Detalle brutos
+    setText("t_new_guardias_gross", fmtEUR(r.n.guardias));
+    setText("t_old_guardias_gross", fmtEUR(r.o.guardias));
+    setText("t_new_horas_gross", fmtEUR(r.n.horas_bruto));
+    setText("t_old_horas_gross", fmtEUR(r.o.horas_bruto));
+    setText("t_new_total_gross", fmtEUR(r.n.total_bruto));
+    setText("t_old_total_gross", fmtEUR(r.o.total_bruto));
+
+    // Cotización aplicada
+    setText("t_new_horas_bruto", fmtEUR(r.n.horas_bruto));
+    setText("t_old_horas_bruto", fmtEUR(r.o.horas_bruto));
+    setText("t_new_cot", fmtEUR(r.n.cot));
+    setText("t_old_cot", fmtEUR(r.o.cot));
+    setText("t_new_horas_neto", fmtEUR(r.n.horas_neto));
+    setText("t_old_horas_neto", fmtEUR(r.o.horas_neto));
+
+    // Chart (BRUTO)
+    drawChart(r.n.total_bruto, r.o.total_bruto);
+  }
+
+  // Storage
+  const KEY = "comparativa_guardias_v4";
+  function snapshot(){
+    const ids = [
+      "new_gA_cant","new_gA_precio","new_gB_cant","new_gB_precio","new_horas_cant","new_hora_precio",
+      "old_guardias_cant","old_guardia_precio","old_horas_cant","old_hora_precio"
+    ];
+    const o = {};
+    ids.forEach(id => o[id] = document.getElementById(id).value);
+    return o;
+  }
+  function applySnapshot(o){
+    if(!o) return;
+    Object.entries(o).forEach(([k,v]) => {
+      const el = document.getElementById(k);
+      if(el) el.value = v;
+    });
+  }
+
+  document.getElementById("btnCalc").addEventListener("click", () => {
+    try { render(); }
+    catch(e){ showErr("Error JS: " + (e && e.message ? e.message : e)); console.error(e); }
+  });
+
+  document.getElementById("btnSave").addEventListener("click", () => {
+    localStorage.setItem(KEY, JSON.stringify(snapshot()));
+    render();
+  });
+
+  document.getElementById("btnLoad").addEventListener("click", () => {
+    const raw = localStorage.getItem(KEY);
+    if(raw) applySnapshot(JSON.parse(raw));
+    render();
+  });
+
+  document.getElementById("btnReset").addEventListener("click", () => {
+    applySnapshot({
+      new_gA_cant: 6, new_gA_precio: 300,
+      new_gB_cant: 6, new_gB_precio: 400,
+      new_horas_cant: 80, new_hora_precio: 25,
+      old_guardias_cant: 12, old_guardia_precio: 200,
+      old_horas_cant: 300, old_hora_precio: 25
+    });
+    render();
+  });
+
+  document.querySelectorAll("input").forEach(i => i.addEventListener("input", () => { try { render(); } catch(e){} }));
+  window.addEventListener("resize", () => { try { render(); } catch(e){} });
+
+  // Init
+  try {
+    const raw = localStorage.getItem(KEY);
+    if(raw) applySnapshot(JSON.parse(raw));
+    render();
+  } catch(e){
+    showErr("Error JS al iniciar: " + (e && e.message ? e.message : e));
+    console.error(e);
+  }
+})();
+</script>
+
+</body>
+</html>
